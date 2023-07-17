@@ -4,19 +4,18 @@ import webbrowser
 
 from PIL import Image
 from PIL import ImageFile
+from PIL import ImageFilter
+from PIL import ImageChops 
 
-import numpy as np
-from skimage.metrics import structural_similarity
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
-def open_numpy_array_in_browser(numpy_array):
-    file = tempfile.NamedTemporaryFile()
+def open_numpy_array_in_browser(pil_image):
+    temp_file = tempfile.NamedTemporaryFile(dir="./tempimages", delete=False, suffix='.png')
 
-    filled_img = Image.fromarray(numpy_array)
-    filled_img.save(file, 'png')
+    pil_image.save(temp_file.name)
 
-    webbrowser.open(file.name)
+    webbrowser.open(temp_file.name)
 
 def extract_images(response_raw):
     newline_pos = response_raw.find(b'\r\n')
@@ -37,25 +36,12 @@ def extract_images(response_raw):
     return (first_chunk_with, second_chunk_with)
 
 def show_two_images_diff(image1, image2):
-    # Код был взят с
-    # https://stackoverflow.com/a/32264327/7415288
-    # https://stackoverflow.com/a/56193442/7415288
+    im1 = Image.open(io.BytesIO(image1))
+    pil_image1 = im1.filter(ImageFilter.GaussianBlur(radius = 3))
 
-    pil_image1 = Image.open(io.BytesIO(image1))
+    im2 = Image.open(io.BytesIO(image2))
+    pil_image2 = im2.filter(ImageFilter.GaussianBlur(radius = 3))
 
-    pil_image2 = Image.open(io.BytesIO(image2))
+    buffer3 = ImageChops.difference(pil_image1, pil_image2)
 
-    before = np.array(pil_image1)
-    after = np.array(pil_image2)
-
-    # Compute SSIM between two images
-    (score, diff) = structural_similarity(before, after, multichannel=True, full=True)
-    print("Image similarity", score)
-
-    # The diff image contains the actual image differences between the two images
-    # and is represented as a floating point data type in the range [0,1] 
-    # so we must convert the array to 8-bit unsigned integers in the range
-    # [0,255] before we can use it with OpenCV
-    diff = (diff * 255).astype("uint8")
-
-    open_numpy_array_in_browser(diff)
+    open_numpy_array_in_browser(buffer3)

@@ -6,7 +6,7 @@ https://vk.com/app6117747
 mitmdump -s proxy.py
 ```
 
-Потом надо еще установить SSL сертификат и настроить прокси http://localhost:8080 в браузере:
+Потом надо еще установить SSL сертификат http://mitm.it/ и настроить прокси http://localhost:8080 в браузере:
 
 https://docs.mitmproxy.org/stable/concepts-certificates/
 
